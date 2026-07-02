@@ -348,6 +348,35 @@ jobs:
             rm -rf ODTN6Color.ofx.bundle
           fi
 
+      - name: Prepare release manifest
+        shell: bash
+        run: |
+          {
+            echo '{'
+            echo '  "schemaVersion": 1,'
+            echo '  "assets": {'
+
+            first_asset=true
+            for asset in ODTN6Color-macOS.zip ODTN6Color-Windows.zip; do
+              [[ -f "$asset" ]] || continue
+
+              if [[ "$first_asset" == true ]]; then
+                first_asset=false
+              else
+                echo ','
+              fi
+
+              printf '    "%s": {\n' "$asset"
+              printf '      "displayName": "ODT N6 Color",\n'
+              printf '      "requiredEntitlements": ["download:odtn6color"]\n'
+              printf '    }'
+            done
+
+            echo
+            echo '  }'
+            echo '}'
+          } > release-manifest.json
+
       - name: Determine release notes
         id: notes
         shell: bash
@@ -374,4 +403,6 @@ jobs:
           draft: false
           prerelease: ${{ inputs.prerelease }}
           fail_on_unmatched_files: true
-          files: ODTN6Color-*.zip
+          files: |
+            ODTN6Color-*.zip
+            release-manifest.json
