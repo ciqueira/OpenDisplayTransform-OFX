@@ -261,6 +261,7 @@ jobs:
           )
 
           cl /c "$SrcRoot\ODTN6Color.cpp" "/Fo$BuildDir\$PluginName.obj" @CxxFlags
+          if ($LASTEXITCODE -ne 0) { throw "Failed to compile $PluginName.cpp" }
 
           foreach ($SupportFile in @(
             "ofxsCore",
@@ -273,6 +274,7 @@ jobs:
             "ofxsPropertyValidation"
           )) {
             cl /c "$SupportLibDir\$SupportFile.cpp" "/Fo$BuildDir\$SupportFile.obj" @CxxFlags
+            if ($LASTEXITCODE -ne 0) { throw "Failed to compile $SupportFile.cpp" }
           }
 
           & "$env:CUDA_PATH\bin\nvcc.exe" `
@@ -280,9 +282,11 @@ jobs:
             -c "$SrcRoot\ODTN6ColorCudaKernel.cu" `
             -o "$BuildDir\ODTN6ColorCudaKernel.obj" `
             "-I$SrcRoot"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to compile ODTN6ColorCudaKernel.cu" }
 
           $Objects = Get-ChildItem $BuildDir -Filter *.obj | ForEach-Object { $_.FullName }
           cl $Objects "/Fe$BuildDir\$PluginName.ofx" /link /DLL "/LIBPATH:$env:CUDA_PATH\lib\x64" cudart_static.lib Shell32.lib
+          if ($LASTEXITCODE -ne 0) { throw "Failed to link $PluginName.ofx" }
 
           New-Item -ItemType Directory -Force $BundleDir | Out-Null
           New-Item -ItemType Directory -Force $LegalDir | Out-Null
