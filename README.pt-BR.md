@@ -163,9 +163,10 @@ Consulte [BINARY_DISTRIBUTION.md](BINARY_DISTRIBUTION.md).
 
 ## OpenFX SDK
 
-Este repositório inclui o OpenFX SDK 1.5.1 em:
+Os builds usam o OpenFX SDK 1.5.1 em:
 
 - `src/third_party/openfx`
 
-Isso mantém o projeto OFX autocontido e evita dependências de pastas locais fora
-do repositório.
+Essa pasta intencionalmente não é commitada neste repositório. O GitHub Actions
+faz checkout de `AcademySoftwareFoundation/openfx` em `OFX_Release_1.5.1` antes
+do build, e builds locais devem colocar a mesma versão do SDK nesse caminho.

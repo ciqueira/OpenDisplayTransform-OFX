@@ -55,6 +55,14 @@ jobs:
           ref: ${{ inputs.source_ref }}
           fetch-depth: 0
 
+      - name: Checkout OpenFX SDK
+        uses: actions/checkout@v4
+        with:
+          repository: AcademySoftwareFoundation/openfx
+          ref: OFX_Release_1.5.1
+          path: src/third_party/openfx
+          persist-credentials: false
+
       - name: Pin source revision
         id: source
         shell: bash
@@ -83,7 +91,7 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate vendored OpenFX SDK
+      - name: Validate OpenFX SDK
         shell: bash
         run: |
           test -f src/third_party/openfx/include/ofxImageEffect.h
@@ -101,6 +109,14 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
           fetch-depth: 0
+
+      - name: Checkout OpenFX SDK
+        uses: actions/checkout@v4
+        with:
+          repository: AcademySoftwareFoundation/openfx
+          ref: OFX_Release_1.5.1
+          path: src/third_party/openfx
+          persist-credentials: false
 
       - name: Build plugin
         shell: bash
@@ -185,6 +201,14 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
           fetch-depth: 0
+
+      - name: Checkout OpenFX SDK
+        uses: actions/checkout@v4
+        with:
+          repository: AcademySoftwareFoundation/openfx
+          ref: OFX_Release_1.5.1
+          path: src/third_party/openfx
+          persist-credentials: false
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
