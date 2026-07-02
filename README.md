@@ -21,7 +21,7 @@ This build currently includes:
 
 | Plugin | Status | Distribution | Get Key |
 | --- | --- | --- | --- |
-| ODT N6 Color | Active | MCNexus / OpenKey | Coming soon |
+| ODT N6 Color | Active | MCNexus / OpenKey | [Get Key](https://bridge.magnociqueira.com.br/github/claim?t=odt-ofx&tmpl=d2968490-fbf7-4d21-a291-1e0ce6900ffe&sig=82a3bb4b8f01d281) |
 
 Planned backlog:
 
@@ -117,7 +117,8 @@ Activation flow:
 3. Activate the plugin with that key.
 4. Install or update the plugin from MCNexus.
 
-The final claim link for `ODT N6 Color` is not published yet.
+Lost your key? Open the same claim link again with the same GitHub account to
+recover the same license.
 
 ## Credits
 
