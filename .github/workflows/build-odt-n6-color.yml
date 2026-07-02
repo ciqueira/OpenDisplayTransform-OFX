@@ -1,0 +1,349 @@
+name: Build ODT N6 Color
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Build target
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - windows
+          - macos
+      source_ref:
+        description: Branch, tag, or commit to build
+        required: true
+        default: main
+        type: string
+      version:
+        description: Manual release version, without v prefix
+        required: false
+        default: ""
+        type: string
+      description:
+        description: Optional release notes
+        required: false
+        default: ""
+        type: string
+      prerelease:
+        description: Mark release as pre-release
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: odt-n6-color-release-${{ inputs.source_ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      - name: Pin source revision
+        id: source
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Determine version
+        id: version
+        shell: bash
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${MANUAL_VERSION:-$(tr -d '[:space:]' < src/odt_n6_color/VERSION)}"
+          VERSION="${VERSION#v}"
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version: $VERSION"
+            exit 1
+          fi
+
+          TAG="odt-n6-color-v${VERSION}"
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::Tag ${TAG} already exists."
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate vendored OpenFX SDK
+        shell: bash
+        run: |
+          test -f src/third_party/openfx/include/ofxImageEffect.h
+          test -f src/third_party/openfx/Support/include/ofxsImageEffect.h
+          test -f src/third_party/openfx/Support/LICENSE
+
+  build-macos:
+    name: Build macOS
+    needs: prepare
+    if: inputs.target == 'both' || inputs.target == 'macos'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+
+      - name: Build plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PLUGIN_NAME="ODTN6Color"
+          SRC_ROOT="src/odt_n6_color"
+          OFX_ROOT="src/third_party/openfx"
+          SUPPORT_LIB_DIR="${OFX_ROOT}/Support/Library"
+          BUILD_DIR="build/odt_n6_color/macos"
+          BUNDLE_ROOT="${BUILD_DIR}/${PLUGIN_NAME}.ofx.bundle"
+          BUNDLE_DIR="${BUNDLE_ROOT}/Contents/MacOS"
+          LEGAL_DIR="${BUNDLE_ROOT}/Contents/Resources/Legal"
+          VERSION="${{ needs.prepare.outputs.version }}"
+
+          mkdir -p "${BUILD_DIR}"
+
+          ARCH_FLAGS=(-arch arm64 -arch x86_64)
+          CXXFLAGS=(
+            -std=c++14
+            "${ARCH_FLAGS[@]}"
+            -fvisibility=hidden
+            -I"${OFX_ROOT}/include"
+            -I"${OFX_ROOT}/Support/include"
+            -O3
+            -Wall
+            "-DPLUGIN_VERSION=\"${VERSION}\""
+          )
+
+          g++ -c "${SRC_ROOT}/ODTN6Color.cpp" -o "${BUILD_DIR}/${PLUGIN_NAME}.o" "${CXXFLAGS[@]}"
+          g++ -c "${SRC_ROOT}/ODTN6ColorMetalKernel.mm" -o "${BUILD_DIR}/ODTN6ColorMetalKernel.o" "${CXXFLAGS[@]}"
+
+          for support_file in \
+            ofxsCore \
+            ofxsImageEffect \
+            ofxsInteract \
+            ofxsLog \
+            ofxsMultiThread \
+            ofxsParams \
+            ofxsProperty \
+            ofxsPropertyValidation
+          do
+            g++ -c "${SUPPORT_LIB_DIR}/${support_file}.cpp" -o "${BUILD_DIR}/${support_file}.o" "${CXXFLAGS[@]}"
+          done
+
+          g++ "${BUILD_DIR}"/*.o \
+            -o "${BUILD_DIR}/${PLUGIN_NAME}.ofx" \
+            -bundle \
+            -fvisibility=hidden \
+            -framework Metal \
+            -framework Foundation \
+            -framework AppKit \
+            "${ARCH_FLAGS[@]}"
+
+          strip -x "${BUILD_DIR}/${PLUGIN_NAME}.ofx"
+
+          mkdir -p "${BUNDLE_DIR}" "${LEGAL_DIR}"
+          cp "${BUILD_DIR}/${PLUGIN_NAME}.ofx" "${BUNDLE_DIR}/"
+          cp LICENSE "${LEGAL_DIR}/GPL-3.0.txt"
+          cp NOTICE.md UPSTREAM.md BINARY_DISTRIBUTION.md "${LEGAL_DIR}/"
+          cp "${OFX_ROOT}/Support/LICENSE" "${LEGAL_DIR}/OPENFX-BSD-3-CLAUSE.txt"
+          chmod -R 755 "${BUNDLE_ROOT}"
+          find "${BUNDLE_ROOT}" -name '._*' -delete
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ODTN6Color-macOS
+          path: build/odt_n6_color/macos/ODTN6Color.ofx.bundle
+          if-no-files-found: error
+          retention-days: 1
+
+  build-windows:
+    name: Build Windows CUDA
+    needs: prepare
+    if: inputs.target == 'both' || inputs.target == 'windows'
+    runs-on: windows-2022
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          vsversion: "2022"
+
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.16
+        with:
+          cuda: 12.4.1
+          method: network
+          sub-packages: '["nvcc", "cudart"]'
+
+      - name: Show compiler versions
+        shell: pwsh
+        run: |
+          cl /Bv 2>&1 | Select-Object -First 20
+          nvcc --version
+
+      - name: Build plugin
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $PluginName = "ODTN6Color"
+          $SrcRoot = "src\odt_n6_color"
+          $OfxRoot = "src\third_party\openfx"
+          $SupportLibDir = "$OfxRoot\Support\Library"
+          $BuildDir = "build\odt_n6_color\windows"
+          $BundleRoot = "$BuildDir\$PluginName.ofx.bundle"
+          $BundleDir = "$BundleRoot\Contents\Win64"
+          $LegalDir = "$BundleRoot\Contents\Resources\Legal"
+          $Version = "${{ needs.prepare.outputs.version }}"
+
+          New-Item -ItemType Directory -Force $BuildDir | Out-Null
+
+          $CxxFlags = @(
+            "/std:c++14",
+            "/EHsc",
+            "/O2",
+            "/nologo",
+            "/W3",
+            "/DWIN32",
+            "/D_WINDOWS",
+            "/DPLUGIN_VERSION=`"$Version`"",
+            "/I$OfxRoot\include",
+            "/I$OfxRoot\Support\include",
+            "/I$env:CUDA_PATH\include"
+          )
+
+          cl /c "$SrcRoot\ODTN6Color.cpp" "/Fo$BuildDir\$PluginName.obj" @CxxFlags
+
+          foreach ($SupportFile in @(
+            "ofxsCore",
+            "ofxsImageEffect",
+            "ofxsInteract",
+            "ofxsLog",
+            "ofxsMultiThread",
+            "ofxsParams",
+            "ofxsProperty",
+            "ofxsPropertyValidation"
+          )) {
+            cl /c "$SupportLibDir\$SupportFile.cpp" "/Fo$BuildDir\$SupportFile.obj" @CxxFlags
+          }
+
+          & "$env:CUDA_PATH\bin\nvcc.exe" `
+            --std=c++14 `
+            -c "$SrcRoot\ODTN6ColorCudaKernel.cu" `
+            -o "$BuildDir\ODTN6ColorCudaKernel.obj" `
+            "-I$SrcRoot"
+
+          $Objects = Get-ChildItem $BuildDir -Filter *.obj | ForEach-Object { $_.FullName }
+          cl $Objects "/Fe$BuildDir\$PluginName.ofx" /link /DLL "/LIBPATH:$env:CUDA_PATH\lib\x64" cudart_static.lib Shell32.lib
+
+          New-Item -ItemType Directory -Force $BundleDir | Out-Null
+          New-Item -ItemType Directory -Force $LegalDir | Out-Null
+          Copy-Item "$BuildDir\$PluginName.ofx" $BundleDir
+          Copy-Item LICENSE "$LegalDir\GPL-3.0.txt"
+          Copy-Item NOTICE.md, UPSTREAM.md, BINARY_DISTRIBUTION.md $LegalDir
+          Copy-Item "$OfxRoot\Support\LICENSE" "$LegalDir\OPENFX-BSD-3-CLAUSE.txt"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ODTN6Color-Windows
+          path: build/odt_n6_color/windows/ODTN6Color.ofx.bundle
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Create release
+    needs:
+      - prepare
+      - build-macos
+      - build-windows
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      (needs.build-macos.result == 'success' || needs.build-macos.result == 'skipped') &&
+      (needs.build-windows.result == 'success' || needs.build-windows.result == 'skipped') &&
+      (needs.build-macos.result == 'success' || needs.build-windows.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download macOS artifact
+        if: needs.build-macos.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: ODTN6Color-macOS
+          path: artifacts/macos
+
+      - name: Download Windows artifact
+        if: needs.build-windows.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: ODTN6Color-Windows
+          path: artifacts/windows
+
+      - name: Prepare ZIP files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -d artifacts/macos ]]; then
+            mv artifacts/macos ODTN6Color.ofx.bundle
+            zip -r ODTN6Color-macOS.zip ODTN6Color.ofx.bundle -x '*/._*'
+            rm -rf ODTN6Color.ofx.bundle
+          fi
+
+          if [[ -d artifacts/windows ]]; then
+            mv artifacts/windows ODTN6Color.ofx.bundle
+            zip -r ODTN6Color-Windows.zip ODTN6Color.ofx.bundle -x '*/._*'
+            rm -rf ODTN6Color.ofx.bundle
+          fi
+
+      - name: Determine release notes
+        id: notes
+        shell: bash
+        env:
+          MANUAL_DESCRIPTION: ${{ inputs.description }}
+        run: |
+          {
+            echo "body<<EOF"
+            if [[ -n "$MANUAL_DESCRIPTION" ]]; then
+              echo "$MANUAL_DESCRIPTION"
+            else
+              echo "Automated ODT N6 Color release."
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ needs.prepare.outputs.source_sha }}
+          name: ODT N6 Color v${{ needs.prepare.outputs.version }}
+          body: ${{ steps.notes.outputs.body }}
+          draft: false
+          prerelease: ${{ inputs.prerelease }}
+          fail_on_unmatched_files: true
+          files: ODTN6Color-*.zip
