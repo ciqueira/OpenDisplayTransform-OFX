@@ -1,7 +1,5 @@
 # OpenDisplayTransform-OFX for DaVinci Resolve
 
-[Português do Brasil](README.pt-BR.md)
-
 OpenFX ports of selected Resolve DCTL look tools from
 [open-display-transform](https://github.com/jedypod/open-display-transform) for
 DaVinci Resolve.
