@@ -17,9 +17,9 @@ https://github.com/jedypod/open-display-transform
 
 Esta versão inclui:
 
-| Plugin | Status | Distribuição | Obter Chave |
-| --- | --- | --- | --- |
-| ODT N6 Color | Ativo | MCNexus / OpenKey | [Obter Chave](https://bridge.magnociqueira.com.br/github/claim?t=odt-ofx&tmpl=d2968490-fbf7-4d21-a291-1e0ce6900ffe&sig=82a3bb4b8f01d281) |
+| Plugin | Status | Distribuição | Chave Gratuita | Apoiar o Projeto |
+| --- | --- | --- | --- | --- |
+| ODT N6 Color | Ativo | MCNexus / OpenKey | [Obter Chave](https://bridge.magnociqueira.com.br/github/claim?t=odt-ofx&tmpl=d2968490-fbf7-4d21-a291-1e0ce6900ffe&sig=82a3bb4b8f01d281) | [Torne-se um Apoiador](https://bridge.magnociqueira.com.br/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter) |
 
 Backlog planejado:
 
@@ -118,6 +118,35 @@ Fluxo de ativação:
 Perdeu sua chave? Abra o mesmo link de solicitação usando a mesma conta GitHub
 para recuperar a mesma licença.
 
+## Apoie o Projeto
+
+Os plugins e o código-fonte do OpenDisplayTransform-OFX permanecem disponíveis
+sob GPLv3. Uma compra Supporter opcional remunera somente suporte independente
+e comunicações operacionais relacionadas; ela não compra o software, não
+restringe redistribuição e não desbloqueia recursos exclusivos.
+
+Uma compra ativa cobre por 12 meses todos os plugins identificados como
+suportados neste repositório e inclui:
+
+- suporte prioritário e privado por e-mail; e
+- comunicações operacionais sobre builds suportados, releases,
+  compatibilidade, manutenção, segurança e alterações materiais do serviço.
+
+Como esta é uma oferta `support_only`, obtenha ao menos uma chave técnica
+gratuita do OpenDisplayTransform-OFX antes do checkout. Chaves separadas usadas
+para instalação e atualização não exigem compras de suporte separadas.
+
+[Torne-se um apoiador dos builds OpenDisplayTransform-OFX](https://bridge.magnociqueira.com.br/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter)
+
+Antes da compra, consulte os
+[termos do produto](https://legal.magnociqueira.com.br/pt-BR/products/open-display-transform-ofx/terms/),
+a [política de suporte](https://legal.magnociqueira.com.br/pt-BR/products/open-display-transform-ofx/support/),
+o [aviso de privacidade](https://legal.magnociqueira.com.br/pt-BR/products/open-display-transform-ofx/privacy/)
+e a [política de cancelamento e reembolso](https://legal.magnociqueira.com.br/pt-BR/products/open-display-transform-ofx/refunds/).
+Resumos para consulta estão em [`legal/`](legal/pt-BR/README.md). O suporte é
+prestado de forma independente por Magno Ciqueira e não representa suporte
+oficial do autor upstream Jed Smith.
+
 ## Créditos
 
 Projeto Open Display Transform original e DCTLs:
@@ -145,6 +174,7 @@ licenciado sob GPLv3. Consulte:
 - [LICENSE](LICENSE)
 - [NOTICE.md](NOTICE.md)
 - [UPSTREAM.md](UPSTREAM.md)
+- [Documentos legais do produto](legal/pt-BR/README.md)
 
 O scaffold genérico MC OFX usado como referência de arquitetura é de autoria de
 Magno Ciqueira e está autorizado para uso neste projeto GPLv3. Isso não inclui

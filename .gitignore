@@ -1,0 +1,45 @@
+# macOS / AppleDouble
+.DS_Store
+._*
+
+# Build outputs
+/Makefile
+/local_make/
+build/
+build-*/
+dist/
+release/
+*.ofx.bundle/
+*.ofx
+*.zip
+*.pkg
+*.exe
+*.dmg
+
+# Prevent accidental root-level SDK drops. The OpenFX SDK is expected at
+# src/third_party/openfx for local/CI builds, but it is not committed.
+/third_party/
+/external/
+/openfx/
+/OpenFX/
+/MCPlugins/third_party/openfx/
+src/third_party/
+
+# Compiled objects
+*.o
+*.obj
+*.a
+*.lib
+*.dylib
+*.dll
+*.so
+*.air
+*.metallib
+
+# IDE / generated
+*.xcuserdata/
+*.xcworkspace/
+*.xcodeproj/project.xcworkspace/
+*.vcxproj.user
+*.suo
+*.user
