@@ -6,7 +6,7 @@ DaVinci Resolve.
 
 This repository provides GPU-accelerated OFX plugins adapted from selected ODT
 DCTLs. The plugins are distributed through
-[MCNexus](https://github.com/ciqueira/MCNexus), which handles license
+[MCNexus](https://mcnexus.app), which handles license
 activation, downloads, updates, and platform-specific installation.
 
 Original Open Display Transform project and DCTL source by Jed Smith:
@@ -19,7 +19,7 @@ This build currently includes:
 
 | Plugin | Status | Distribution | Free Key | Support Project |
 | --- | --- | --- | --- | --- |
-| ODT N6 Color | Active | MCNexus / OpenKey | [Get Key](https://bridge.magnociqueira.com.br/github/claim?t=odt-ofx&tmpl=d2968490-fbf7-4d21-a291-1e0ce6900ffe&sig=82a3bb4b8f01d281) | [Become a Supporter](https://bridge.magnociqueira.com.br/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter) |
+| ODT N6 Color | Active | MCNexus / OpenKey | [Get Key](https://bridge.mcnexus.app/github/claim?t=odt-ofx&tmpl=d2968490-fbf7-4d21-a291-1e0ce6900ffe&sig=82a3bb4b8f01d281) | [Become a Supporter](https://bridge.mcnexus.app/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter) |
 
 Planned backlog:
 
@@ -136,7 +136,7 @@ Because this is a `support_only` offer, obtain at least one free
 OpenDisplayTransform-OFX technical key before checkout. Separate keys used for
 installation and updates do not require separate support purchases.
 
-[Become a Supporter of the OpenDisplayTransform-OFX Builds](https://bridge.magnociqueira.com.br/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter)
+[Become a Supporter of the OpenDisplayTransform-OFX Builds](https://bridge.mcnexus.app/commerce/start?t=odt-ofx&offer=open-display-transform-ofx-supporter)
 
 Before purchasing, read the
 [product terms](https://legal.magnociqueira.com.br/products/open-display-transform-ofx/terms/),
